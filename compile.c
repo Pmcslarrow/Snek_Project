@@ -1,4 +1,5 @@
 //Simply tired of running all the compiling and running commands so I do it here for one line
+//
 #include "snek.h"
 
 int main()

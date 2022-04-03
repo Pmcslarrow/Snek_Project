@@ -1,3 +1,5 @@
+// snek.h
+
 #include <sys/socket.h> // for socket()
 #include <arpa/inet.h>  // for add6
 #include <stdio.h>      // for printf()
@@ -23,28 +25,26 @@
 //typedef int bool;
 
 // gameplay
-#define HIGH 23
-#define WIDE 84
 
-#define WINDOW_HEIGHT 20
 #define WINDOW_START_X 1
 #define WINDOW_START_Y 1
 
 #define ROWS 23
 #define COLS 76
 
-#define SNAK '&'
-#define SNEK 'O'
+#define SNAK "&"
+#define SNEK "O"
 
-#define APPLE '@'
+#define APPLE "@"
 
-#define REDO 'r'
-#define QUIT 'q'
+#define REDO "r"
+#define QUIT "q"
 
-#define FORE 'w'
-#define BACK 's'
+#define UP 'w'
+#define DOWN 's'
 #define LEFT 'a'
-#define RITE 'd'
+#define RIGHT 'd'
+
 
 
 // shorter names for addresses and casts

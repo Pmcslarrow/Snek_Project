@@ -82,14 +82,15 @@ int main(int argc, char const *argv[])
 
         while(1)
         {
+            fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
+
             if(recv(connection, ClientMessage, BUFF, 0) == -1)
             {
                 printf("[-] recv error \n");
 
             } else {
-                int length = strlen(ClientMessage) - 1;
-                user_direction = choose_last_character(&ClientMessage, length);
-                printf("USER DIRECTION: %c\n", user_direction);
+                user_direction = ClientMessage[0];
+                printf("FROM USER: %c\n", user_direction);
                 send(connection, ClientMessage, strlen(ClientMessage), 0);
             }
             

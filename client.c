@@ -2,12 +2,33 @@
 #include "snek.h"
 #include <ncurses.h>
 
+/* Takes user input and adjust snake direction */
+void move_snake(int *x, int *y, char ServerMessage)
+{
+    //ONLY WORKS FOR LEFT AND DOWN??
+    switch(ServerMessage)
+    {
+        case RIGHT:
+            *x += 1;
+        
+        case LEFT:
+            *x -= 1;
+        
+        case UP:
+            *y -= 1;
+
+        case DOWN:
+            *y += 1;
+    }
+}
+
 
 int main(int argc, char const *argv[])
 {
     int sock;
     struct sockaddr_in6 address; 
     char ServerMessage[BUFF] = {0};
+    char ClientMessage[BUFF] = {0};
 
     // Create Socket
     sock = socket(DOMAIN, SOCK_STREAM, 0);
@@ -34,43 +55,71 @@ int main(int argc, char const *argv[])
     printf("[+] Client Connected.\n");
 
 
-//Starting the game
-    
+
+/*Starting the game*/
+
+    printf("Welcome to SNEK!\nWhen you start, the snake will default in the right direction!\n");
     printf("Press k, then ENTER to start\n");
     char c;
     scanf("%c", &c);
     if (c == 'k')
     {
+        
+        initscr();
+        noecho();
 
-        char buf[20];
-        buf[0] = 'd';
-        fflush(stdout);
+        /* Defaulting Screen and Snake */
+        int WIDTH, HEIGHT;
+        getmaxyx(stdscr, HEIGHT, WIDTH);
+        int SNEK_X = WIDTH / 2;
+        int SNEK_Y = HEIGHT / 2;
+        WINDOW * win = newwin(HEIGHT - 1, WIDTH - 1, WINDOW_START_Y, WINDOW_START_X);
+        char dir = 'd';
+
         while(1)
         {
-            char ClientMessage[BUFF] = {0};
-            
+            clear();
+
+            /* Borders */
+            box(win, 0, 0);
+            wrefresh(win);
+
+            /* Placing Snake on Screen */
+            mvwprintw(win, SNEK_Y, SNEK_X, SNAK);
+            wrefresh(win);
+
+            /* User Input */
+            fflush(stdout);
             fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
             sleep(1);
-            int numRead = read(0, buf, 15);
-            if (numRead > 0) {
-                printf("You said: %s\n", buf);
-                fflush(stdout);
+
+            char c = getch();
+            if (c != -1)
+            {
+                dir = (char)c;
             }
-            printf("\n\n");
-            fflush(stdout);
+            ClientMessage[0] = dir;
+        
 
+            //Send character to the server
+            send(sock, ClientMessage, strlen(ClientMessage), 0);
 
-            //Sending the Message typed (or not typed) by the user
-            send(sock, buf, strlen(buf), 0);
-
-            //Recieving any replies from the server
+            //Recieve Response from server
             if (recv(sock, ServerMessage, BUFF, 0) == -1)
             {
                 printf("[-] recv error \n");
                 exit(1);
             }
-            printf("Server Message: \t %s \n", ServerMessage);
+
+            /* Movement */
+            move_snake(&SNEK_X, &SNEK_Y, ServerMessage[0]);
+        
+
+            
+        
+            
         }
+        endwin();
         
     }
     return 0;
