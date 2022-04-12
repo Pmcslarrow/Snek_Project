@@ -1,4 +1,4 @@
-//  snek.c
+//  snek.c //
 #include "snek.h"
 
 // Function to start the server from the snake file as it is in the same directory
