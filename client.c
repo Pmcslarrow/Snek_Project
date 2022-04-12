@@ -1,25 +1,37 @@
 // client.c
 #include "snek.h"
-#include <ncurses.h>
+#include "plist.c"
 
-/* Takes user input and adjust snake direction */
-void move_snake(int *x, int *y, char ServerMessage)
+int get_rand(int MAX) {
+    srand(time(NULL));
+    return rand() % MAX;
+}
+
+/*
+https://stackoverflow.com/questions/1157209/is-there-an-alternative-sleep-function-in-c-to-milliseconds
+Professor. Calvin said that if I wanted to use a faster timer than 1 second to look it up,
+rather than just doing a 1 second timer this implements a timer in miliseconds rather than seconds.
+I provide the link to give credit where credit is due. 
+*/
+int msleep(long msec)
 {
-    //ONLY WORKS FOR LEFT AND DOWN??
-    switch(ServerMessage)
-    {
-        case RIGHT:
-            *x += 1;
-        
-        case LEFT:
-            *x -= 1;
-        
-        case UP:
-            *y -= 1;
+    struct timespec ts;
+    int res;
 
-        case DOWN:
-            *y += 1;
+    if (msec < 0)
+    {
+        errno = EINVAL;
+        return -1;
     }
+
+    ts.tv_sec = msec / 1000;
+    ts.tv_nsec = (msec % 1000) * 1000000;
+
+    do {
+        res = nanosleep(&ts, &ts);
+    } while (res && errno == EINTR);
+
+    return res;
 }
 
 
@@ -64,34 +76,39 @@ int main(int argc, char const *argv[])
     scanf("%c", &c);
     if (c == 'k')
     {
-        
         initscr();
         noecho();
 
         /* Defaulting Screen and Snake */
+        plist snake_list = pl_new();
+        int GAME_SCORE = 0;
         int WIDTH, HEIGHT;
         getmaxyx(stdscr, HEIGHT, WIDTH);
-        int SNEK_X = WIDTH / 2;
-        int SNEK_Y = HEIGHT / 2;
+        int SNEK_X = (WIDTH / 2);
+        int SNEK_Y = (HEIGHT / 2);
+        int APPLE_X, APPLE_Y;
+        APPLE_X = get_rand(WIDTH - 1);
+        APPLE_Y = get_rand(HEIGHT - 1);
         WINDOW * win = newwin(HEIGHT - 1, WIDTH - 1, WINDOW_START_Y, WINDOW_START_X);
         char dir = 'd';
 
+
         while(1)
         {
-            clear();
+            wclear(win);
 
             /* Borders */
             box(win, 0, 0);
-            wrefresh(win);
 
             /* Placing Snake on Screen */
             mvwprintw(win, SNEK_Y, SNEK_X, SNAK);
+            mvwprintw(win, APPLE_Y, APPLE_X, APPLE);
             wrefresh(win);
 
             /* User Input */
             fflush(stdout);
             fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
-            sleep(1);
+            msleep(500);
 
             char c = getch();
             if (c != -1)
@@ -111,13 +128,27 @@ int main(int argc, char const *argv[])
                 exit(1);
             }
 
-            /* Movement */
-            move_snake(&SNEK_X, &SNEK_Y, ServerMessage[0]);
-        
+            /* Movement Directioning */
+            if (ClientMessage[0] == 'd' || ClientMessage[0] == 'D') { SNEK_X += 1; }
+            if (ClientMessage[0] == 'w' || ClientMessage[0] == 'W') { SNEK_Y -= 1; }
+            if (ClientMessage[0] == 'a' || ClientMessage[0] == 'A') { SNEK_X -= 1; }
+            if (ClientMessage[0] == 's' || ClientMessage[0] == 'S') { SNEK_Y += 1; }
 
-            
-        
-            
+            /* Collision Detection */
+            if (SNEK_X == APPLE_X && SNEK_Y == APPLE_Y)
+            {
+                /*The snek and the apple intersect and we need to update the score, snake length, and apple location*/
+                GAME_SCORE += 1;
+                APPLE_X = get_rand(WIDTH - 1);
+                APPLE_Y = get_rand(HEIGHT - 1);
+                dir = ClientMessage[0];
+            }
+
+            /* Window Collision */
+            if (SNEK_X < 2) { SNEK_X = WIDTH - 2; dir = 'a';  }
+            if (SNEK_X > WIDTH - 3) { SNEK_X = 2; dir = 'd';  }
+            if (SNEK_Y < 1) { SNEK_Y = HEIGHT - 3; dir = 'w'; }
+            if (SNEK_Y > HEIGHT - 3) { SNEK_Y = 1; dir = 's'; }
         }
         endwin();
         
