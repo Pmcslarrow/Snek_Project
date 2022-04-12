@@ -9,6 +9,8 @@
 #include <time.h>       // for time()
 #include <fcntl.h>      // for fcntl()
 #include <curses.h>
+#include <time.h>
+#include <errno.h>  
 
 // sockets
 #define PORT 0xC399     // get it? CS 399?
@@ -22,7 +24,6 @@
 // booleans
 #define TRUE 1
 #define FALSE 0
-//typedef int bool;
 
 // gameplay
 
