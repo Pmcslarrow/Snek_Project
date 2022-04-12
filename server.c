@@ -1,4 +1,4 @@
-// server.c
+// server.c // 
 #include "snek.h"
 
 char choose_last_character(char* ClientMessage, int len)
