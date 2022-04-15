@@ -79,6 +79,14 @@ int main(int argc, char const *argv[])
         initscr();
         noecho();
 
+
+        struct snake_array
+        {
+            int x;
+            int y;
+            char direction;
+        } array[1789];
+
         /* Defaulting Screen and Snake */
         plist snake_list = pl_new();
         int GAME_SCORE = 0;
@@ -91,6 +99,10 @@ int main(int argc, char const *argv[])
         APPLE_Y = get_rand(HEIGHT - 1);
         WINDOW * win = newwin(HEIGHT - 1, WIDTH - 1, WINDOW_START_Y, WINDOW_START_X);
         char dir = 'd';
+        array[0].x = SNEK_X;
+        array[0].y = SNEK_Y;
+        array[0].direction = dir;
+        int total = 1;
 
 
         while(1)
@@ -101,21 +113,46 @@ int main(int argc, char const *argv[])
             box(win, 0, 0);
 
             /* Placing Snake on Screen */
-            mvwprintw(win, SNEK_Y, SNEK_X, SNAK);
+            
+
+            if (total == 1)
+            {
+                mvwprintw(win, array[0].y, array[0].x, SNEK);
+
+            } else {
+                char old_dir = array[0].direction;
+
+                for (int i=0; i < total; i++)
+                {
+                    int old_x = array[i].x;
+                    int old_y = array[i].y;
+            
+                    if (old_dir == 'w'){ array[i + 1].x = old_x; array[i + 1].y = old_y + 1; }
+                    if (old_dir == 'a'){ array[i + 1].x = old_x + 1; array[i + 1].y = old_y; }
+                    if (old_dir == 's'){ array[i + 1].x = old_x; array[i + 1].y = old_y - 1; }
+                    if (old_dir == 'd'){ array[i + 1].x = old_x - 1; array[i + 1].y = old_y; }
+                    mvwprintw(win, array[i].y, array[i].x, SNEK);
+                    wrefresh(win);
+
+                    old_dir = array[i + 1].direction;
+
+                }
+            }
+            
             mvwprintw(win, APPLE_Y, APPLE_X, APPLE);
             wrefresh(win);
 
             /* User Input */
             fflush(stdout);
             fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
-            msleep(500);
+            msleep(200);
 
             char c = getch();
             if (c != -1)
             {
-                dir = (char)c;
+                array[0].direction = (char)c;
             }
-            ClientMessage[0] = dir;
+            ClientMessage[0] = array[0].direction;
         
 
             //Send character to the server
@@ -129,26 +166,28 @@ int main(int argc, char const *argv[])
             }
 
             /* Movement Directioning */
-            if (ClientMessage[0] == 'd' || ClientMessage[0] == 'D') { SNEK_X += 1; }
-            if (ClientMessage[0] == 'w' || ClientMessage[0] == 'W') { SNEK_Y -= 1; }
-            if (ClientMessage[0] == 'a' || ClientMessage[0] == 'A') { SNEK_X -= 1; }
-            if (ClientMessage[0] == 's' || ClientMessage[0] == 'S') { SNEK_Y += 1; }
+            if (ClientMessage[0] == 'd' || ClientMessage[0] == 'D') { array[0].x += 1; }
+            if (ClientMessage[0] == 'w' || ClientMessage[0] == 'W') { array[0].y -= 1; }
+            if (ClientMessage[0] == 'a' || ClientMessage[0] == 'A') { array[0].x -= 1; }
+            if (ClientMessage[0] == 's' || ClientMessage[0] == 'S') { array[0].y += 1; }
 
             /* Collision Detection */
-            if (SNEK_X == APPLE_X && SNEK_Y == APPLE_Y)
+            if (array[0].x == APPLE_X && array[0].y == APPLE_Y)
             {
                 /*The snek and the apple intersect and we need to update the score, snake length, and apple location*/
                 GAME_SCORE += 1;
                 APPLE_X = get_rand(WIDTH - 1);
                 APPLE_Y = get_rand(HEIGHT - 1);
                 dir = ClientMessage[0];
+                array[total].direction = dir;
+                total += 1;
             }
 
             /* Window Collision */
-            if (SNEK_X < 2) { SNEK_X = WIDTH - 2; dir = 'a';  }
-            if (SNEK_X > WIDTH - 3) { SNEK_X = 2; dir = 'd';  }
-            if (SNEK_Y < 1) { SNEK_Y = HEIGHT - 3; dir = 'w'; }
-            if (SNEK_Y > HEIGHT - 3) { SNEK_Y = 1; dir = 's'; }
+            if (array[0].x < 2) { array[0].x = WIDTH - 3; dir = 'a';  }
+            if (array[0].x > WIDTH - 3) { array[0].x = 2; dir = 'd';  }
+            if (array[0].y < 1) { array[0].y = HEIGHT - 3; dir = 'w'; }
+            if (array[0].y > HEIGHT - 3) { array[0].y = 1; dir = 's'; }
         }
         endwin();
         
