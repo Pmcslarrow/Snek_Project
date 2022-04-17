@@ -1,6 +1,5 @@
 // client.c
 #include "snek.h"
-#include "plist.c"
 
 int get_rand(int MAX) {
     srand(time(NULL));

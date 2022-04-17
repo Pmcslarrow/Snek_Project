@@ -1,4 +1,4 @@
-// snek.h
+/// snek.h ///
 
 #include <sys/socket.h> // for socket()
 #include <arpa/inet.h>  // for add6
@@ -24,6 +24,7 @@
 // booleans
 #define TRUE 1
 #define FALSE 0
+//typedef int bool;
 
 // gameplay
 
