@@ -3,9 +3,12 @@
 1) gcc compile.c
 2) ./a.out
 3) ./snek.out -s (STARTS SERVER)
-4) .snek.out -c (STARTS CLIENT)
+4) In a diffrent terminal direct yourself to the Snek_Project and run ./snek.out -c (STARTS CLIENT)
 
 W - UP
 A - LEFT
 S - DOWN
 D - RIGHT
+
+
+
