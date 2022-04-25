@@ -48,68 +48,29 @@ int isIn(int x, int y, int total)
 }
 
 
-int main(int argc, char const *argv[])
+void game (int sock)
 {
-    int sock;
-    struct sockaddr_in6 address; 
-    char ServerMessage[BUFF] = {0};
-    char ClientMessage[BUFF] = {0};
-
-    // Create Socket
-    sock = socket(DOMAIN, SOCK_STREAM, 0);
-    if (sock == -1)
-    {
-        printf("[-] Could not create socket\n");
-    }
-    printf("[+] Socket created successfully\n");
-
-    address.sin6_family = DOMAIN; 
-    address.sin6_port = htons( PORT ); 
-    inet_pton(DOMAIN, "::1", &address.sin6_addr); 
-
-
-    // Connect to Remote Server
-    int connection_status;
-    connection_status = connect(sock, (struct sockaddr *)&address, sizeof(address));
-    
-    if (connection_status < 0)
-    {
-        printf("[-] Connection to server failed\n");
-        return 1;
-    }
-    printf("[+] Client Connected.\n");
-
-
-
-/*Starting the game*/
-
-    printf("Welcome to SNEK!\nWhen you start, the snake will default in the right direction!\n");
-    printf("Press k, then ENTER to start\n");
-    char c;
-    scanf("%c", &c);
-    if (c == 'k')
-    {
-        initscr();
+	initscr();
         noecho();
 
         /* Defaulting Screen and Snake */
-        int GAME_SCORE = 0;
-        int WIDTH, HEIGHT;
+        int GAME_SCORE = 0, WIDTH, HEIGHT, APPLE_X, APPLE_Y;
         getmaxyx(stdscr, HEIGHT, WIDTH);
         int SNEK_X = (WIDTH / 2);
         int SNEK_Y = (HEIGHT / 2);
-        int APPLE_X, APPLE_Y;
+        int total = 2;
+        int start_speed = 125;
+        char ServerMessage[BUFF] = {0};
+        char ClientMessage[BUFF] = {0};
+        char dir = 'd';
+        WINDOW * win = newwin(HEIGHT - 1, WIDTH - 1, WINDOW_START_Y, WINDOW_START_X);
         APPLE_X = get_rand(WIDTH - 15);
         APPLE_Y = get_rand(HEIGHT - 15);
-        WINDOW * win = newwin(HEIGHT - 1, WIDTH - 1, WINDOW_START_Y, WINDOW_START_X);
-        char dir = 'd';
         array[0].x = SNEK_X;
         array[0].y = SNEK_Y;
         array[1].x = SNEK_X - 1;
         array[1].y = SNEK_Y;
-        int total = 2;
-        int start_speed = 125;
-
+        
 
         while(1)
         {
@@ -118,22 +79,21 @@ int main(int argc, char const *argv[])
             /* Borders */
             box(win, 0, 0);
 
-            /* Placing Snake on Screen */
+            /* Prints the snake & the apple on the screen */
             for (int i=0; i < total; i++)
             {
                 mvwprintw(win, array[i].y, array[i].x, SNEK);
                 wrefresh(win);
             }
-            
             mvwprintw(win, APPLE_Y, APPLE_X, APPLE);
             wrefresh(win);
+
 
             /* User Input */
             fflush(stdout);
             fcntl(0, F_SETFL, fcntl(0, F_GETFL) | O_NONBLOCK);
             msleep(start_speed);
 
-            
             char c = getch();
             if (c != -1)
             {
@@ -147,7 +107,7 @@ int main(int argc, char const *argv[])
             if (ClientMessage[0] == 'a' || ClientMessage[0] == 'A') { array[0].x -= 1; }
             if (ClientMessage[0] == 's' || ClientMessage[0] == 'S') { array[0].y += 1; }
 
-            
+          
             //Send character to the server
             send(sock, ClientMessage, strlen(ClientMessage), 0);
 
@@ -177,6 +137,11 @@ int main(int argc, char const *argv[])
             {
                 APPLE_X = get_rand(WIDTH - 15);
                 APPLE_Y = get_rand(HEIGHT - 15);
+                if (isIn(APPLE_X, APPLE_Y, total))
+                {
+                	APPLE_X = get_rand(WIDTH - 15);
+                	APPLE_Y = get_rand(HEIGHT - 15);
+                }
                 array[total].y = array[total - 1].y;  
                 array[total].x = array[total - 1].x;    
                 total += 1;       
@@ -194,6 +159,52 @@ int main(int argc, char const *argv[])
 
         endwin();
         }
+}
+
+
+
+
+
+int main(int argc, char const *argv[])
+{
+    int sock;
+    struct sockaddr_in6 address; 
+ 
+
+    // Create Socket
+    sock = socket(DOMAIN, SOCK_STREAM, 0);
+    if (sock == -1)
+    {
+        printf("[-] Could not create socket\n");
+    }
+    printf("[+] Socket created successfully\n");
+
+    address.sin6_family = DOMAIN; 
+    address.sin6_port = htons( PORT ); 
+    inet_pton(DOMAIN, "::1", &address.sin6_addr); 
+
+
+    // Connect to Remote Server
+    int connection_status;
+    connection_status = connect(sock, (struct sockaddr *)&address, sizeof(address));
+    
+    if (connection_status < 0)
+    {
+        printf("[-] Connection to server failed\n");
+        return 1;
+    }
+    printf("[+] Client Connected.\n");
+
+
+
+    /*Starting the game*/
+    printf("Welcome to SNEK!\nWhen you start, the snake will default in the right direction!\n");
+    printf("Press k, then ENTER to start\n");
+    char c;
+    scanf("%c", &c);
+    if (c == 'k')
+    {
+        game(sock);
     }
     return 0;
 }
